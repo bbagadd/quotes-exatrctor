@@ -102,10 +102,9 @@ def get_id(sentence: DocSent, person: str, id: str, root_id):
     if id.rpartition("_")[2] == "0":
         # Если не нашли в предложении токен, на который ссылается
         return False
-    else:
-        # Присваиваем id число, на которое ссылается токен
-        id = sentence[int(id.rpartition("_")[2]) - 1].head_id
-        return get_id(sentence, person, id, root_id)
+    # Присваиваем id число, на которое ссылается токен
+    id = sentence[int(id.rpartition("_")[2]) - 1].head_id
+    return get_id(sentence, person, id, root_id)
 
 
 # Типы, которые могут присутствовать у слова
@@ -157,7 +156,7 @@ def get_real_person(num: int, fake_verb: str, doc: Doc) -> Union[str, None]:
                 else:
                     return candidate
             else:
-                return
+                return None
 
 
 def get_person(num: int, text: DocSent, doc: Doc) -> Union[str, None]:
@@ -182,9 +181,8 @@ def get_person(num: int, text: DocSent, doc: Doc) -> Union[str, None]:
                 # В случае, если одно имя
                 if i.tokens[0].head_id == root_id:
                     return i.text
-                else:
-                    # Иначе получим id, на которое ссылается
-                    return get_id(text.tokens, i.text, i.tokens[0].head_id, root_id)
+                # Иначе получим id, на которое ссылается
+                return get_id(text.tokens, i.text, i.tokens[0].head_id, root_id)
 
     # TODO может есть просто обращение nmod
 
@@ -201,7 +199,12 @@ def get_person(num: int, text: DocSent, doc: Doc) -> Union[str, None]:
 
 
 # Предобработка текста
-def get_clear(text):
+def get_clear(text: str) -> [list, str]:
+    """
+    Предобработка текста. Поиск цитат
+    :param text: Текст
+    :return:
+    """
     # Проход по всем кавычкам, удаление их из текста
     for i in re.findall(ONLY_QUOTATION_MARK, text):
         text = re.sub(i[0], i[0][1:-1], text)
@@ -227,9 +230,9 @@ def get_doc(text: str) -> Doc:
         doc = predictor(text)
         text = doc._.resolved_text
     except ValueError:
-        text = text
+        pass
     except IndexError:
-        text = text
+        pass
 
     doc = Doc(text)
     doc.segment(segmenter)
